@@ -17,12 +17,11 @@ public class Utils {
         objToNameMapping.put(Welcome.class, "GREET");
         objToNameMapping.put(Login.class, "LOGIN");
         objToNameMapping.put(Arrived.class, "ARRIVED");
-        objToNameMapping.put(BroadcastSend.class, "BROADCAST");
-        objToNameMapping.put(BroadcastReceive.class, "BROADCAST");
+        objToNameMapping.put(Broadcast.class, "BROADCAST");
         objToNameMapping.put(Pong.class, "PONG");
         objToNameMapping.put(Ping.class, "PING");
         objToNameMapping.put(Disconnected.class, "DISCONNECTED");
-        objToNameMapping.put(Left.class, "DISCONNECTED");
+        objToNameMapping.put(Left.class, "LEFT");
         objToNameMapping.put(Private.class, "PRIVATE");
         objToNameMapping.put(ParseError.class, "PARSE_ERROR");
         objToNameMapping.put(PongError.class, "PONG_ERROR");
@@ -60,4 +59,13 @@ public class Utils {
                 .findFirst()
                 .orElseThrow(() -> new RuntimeException("Cannot find class belonging to header " + header));
     }
+
+    public static <T> T jsonToObject(String json, Class<T> clazz) {
+        try {
+            return mapper.readValue(json, clazz);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
 }

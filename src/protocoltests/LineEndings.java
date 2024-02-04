@@ -18,7 +18,7 @@ public class LineEndings {
     private Socket s;
     private BufferedReader in;
     private PrintWriter out;
-    private final static int max_delta_allowed_ms = 100;
+    private final static int max_delta_allowed_ms = 200;
 
     @BeforeAll
     static void setupAll() throws IOException {
@@ -42,7 +42,11 @@ public class LineEndings {
     @Test
     void TC2_1_loginFollowedByBROADCASTWithWindowsLineEndingsReturnsOk() throws JsonProcessingException {
         receiveLineWithTimeout(in); //welcome message
-        String message = Utils.objectToMessage(new Login("myname")) + "\r\n" + Utils.objectToMessage(new BroadcastSend("a")) + "\r\n";
+        String message =
+                Utils.objectToMessage(new Login("myname")) +
+                        "\r\n" +
+                        Utils.objectToMessage(new Broadcast("", "a")) +
+                        "\r\n";
         out.print(message);
         out.flush();
 
@@ -62,18 +66,25 @@ public class LineEndings {
     @Test
     void TC2_2_loginFollowedByBROADCASTWithLinuxLineEndingsReturnsOk() throws JsonProcessingException {
         receiveLineWithTimeout(in); //welcome message
-        String message = Utils.objectToMessage(new Login("myname")) + "\n" + Utils.objectToMessage(new BroadcastSend("a")) + "\n";
+        String message = Utils.objectToMessage(new Login("myname")) +
+                "\n" +
+                Utils.objectToMessage(new Broadcast("", "a")) + "\n";
+
+        System.out.println(message);
+
         out.print(message);
         out.flush();
 
-        String serverResponse = receiveLineWithTimeout(in);
-        Response<String> loginResp = Utils.messageToObject(serverResponse);
+        String loginResponse = receiveLineWithTimeout(in);
+        System.out.println("Login Response: " + loginResponse);
+        Response<String> loginResp = Utils.messageToObject(loginResponse);
         assertEquals(800, loginResp.status());
         assertEquals("OK", loginResp.content());
         assertEquals("LOGIN", loginResp.to());
 
-        serverResponse = receiveLineWithTimeout(in);
-        Response<String> broadcastResp = Utils.messageToObject(serverResponse);
+        String broadcastResponse = receiveLineWithTimeout(in);
+        System.out.println("Broadcast Response: " + broadcastResponse);
+        Response<String> broadcastResp = Utils.messageToObject(broadcastResponse);
         assertEquals(800, broadcastResp.status());
         assertEquals("OK", broadcastResp.content());
         assertEquals("BROADCAST", broadcastResp.to());

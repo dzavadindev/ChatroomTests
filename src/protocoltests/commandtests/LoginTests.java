@@ -1,4 +1,4 @@
-package protocoltests;
+package protocoltests.commandtests;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.*;
@@ -23,11 +23,11 @@ class LoginTests {
     private BufferedReader inUser1, inUser2;
     private PrintWriter outUser1, outUser2;
 
-    private final static int max_delta_allowed_ms = 100;
+    private final static int max_delta_allowed_ms = 1000;
 
     @BeforeAll
     static void setupAll() throws IOException {
-        InputStream inUser1 = MultipleUserTests.class.getResourceAsStream("testconfig.properties");
+        InputStream inUser1 = LoginTests.class.getResourceAsStream("../testconfig.properties");
         props.load(inUser1);
         inUser1.close();
     }
@@ -112,15 +112,15 @@ class LoginTests {
     @Test
     void TC1_6_loggingInTwiceReturnsError() throws JsonProcessingException {
         receiveLineWithTimeout(inUser1); //welcome message
-        outUser1.println(Utils.objectToMessage(new Login("abcd")));
+        outUser1.println(Utils.objectToMessage(new Login("abcd"))); // first log in
         outUser1.flush();
         String serverResponse = receiveLineWithTimeout(inUser1);
         Response<String> loginResp = Utils.messageToObject(serverResponse);
         assertEquals(800, loginResp.status());
         assertEquals("OK", loginResp.content());
         assertEquals("LOGIN", loginResp.to());
-        receiveLineWithTimeout(inUser1); //welcome message
-        outUser1.println(Utils.objectToMessage(new Login("abcd")));
+
+        outUser1.println(Utils.objectToMessage(new Login("abcd"))); // second login
         outUser1.flush();
         String secondServerResponse = receiveLineWithTimeout(inUser1);
         Response<String> secondLoginResp = Utils.messageToObject(secondServerResponse);

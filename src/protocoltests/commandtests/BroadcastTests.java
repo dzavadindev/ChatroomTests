@@ -1,12 +1,11 @@
-package protocoltests;
+package protocoltests.commandtests;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import protocoltests.protocol.messages.BroadcastReceive;
-import protocoltests.protocol.messages.BroadcastSend;
+import protocoltests.protocol.messages.Broadcast;
 import protocoltests.protocol.messages.Login;
 import protocoltests.protocol.messages.Response;
 import protocoltests.protocol.utils.Utils;
@@ -15,6 +14,7 @@ import java.io.*;
 import java.net.Socket;
 import java.util.Properties;
 
+import static java.time.Duration.from;
 import static java.time.Duration.ofMillis;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
@@ -30,7 +30,7 @@ public class BroadcastTests {
 
     @BeforeAll
     static void setupAll() throws IOException {
-        InputStream in = MultipleUserTests.class.getResourceAsStream("testconfig.properties");
+        InputStream in = BroadcastTests.class.getResourceAsStream("../testconfig.properties");
         props.load(in);
         in.close();
     }
@@ -54,22 +54,22 @@ public class BroadcastTests {
 
     @Test
     void TC3_2_broadcastMessageIsReceivedByOtherConnectedClients() throws JsonProcessingException {
-        receiveLineWithTimeout(inUser1); //WELCOME
-        receiveLineWithTimeout(inUser2); //WELCOME
+        receiveLineWithTimeout(inUser1); // WELCOME
+        receiveLineWithTimeout(inUser2); // WELCOME
 
         // Connect user1
         outUser1.println(Utils.objectToMessage(new Login("user1")));
         outUser1.flush();
-        receiveLineWithTimeout(inUser1); //OK
+        receiveLineWithTimeout(inUser1); // OK
 
         // Connect user2
         outUser2.println(Utils.objectToMessage(new Login("user2")));
         outUser2.flush();
-        receiveLineWithTimeout(inUser2); //OK
-        receiveLineWithTimeout(inUser1); //JOINED
+        receiveLineWithTimeout(inUser2); // OK
+        receiveLineWithTimeout(inUser1); // U2 JOINED
 
         //send BROADCAST from user 1
-        outUser1.println(Utils.objectToMessage(new BroadcastSend("messagefromuser1")));
+        outUser1.println(Utils.objectToMessage(new Broadcast("", "messagefromuser1")));
         outUser1.flush();
         String fromUser1 = receiveLineWithTimeout(inUser1);
         Response<String> broadcastResp1 = Utils.messageToObject(fromUser1);
@@ -79,11 +79,12 @@ public class BroadcastTests {
         assertEquals("BROADCAST", broadcastResp1.to());
 
         String fromUser2 = receiveLineWithTimeout(inUser2);
-        BroadcastReceive broadcast2 = Utils.messageToObject(fromUser2);
-        assertEquals(new BroadcastReceive("user1", "messagefromuser1"), broadcast2);
+        System.out.println(fromUser2);
+        Broadcast broadcast2 = Utils.messageToObject(fromUser2);
+        assertEquals(new Broadcast("user1", "messagefromuser1"), broadcast2);
 
         //send BROADCAST from user 2
-        outUser2.println(Utils.objectToMessage(new BroadcastSend("messagefromuser2")));
+        outUser2.println(Utils.objectToMessage(new Broadcast("", "messagefromuser2")));
         outUser2.flush();
         fromUser2 = receiveLineWithTimeout(inUser2);
         Response<String> broadcastResp2 = Utils.messageToObject(fromUser2);
@@ -92,8 +93,9 @@ public class BroadcastTests {
         assertEquals("BROADCAST", broadcastResp2.to());
 
         fromUser1 = receiveLineWithTimeout(inUser1);
-        BroadcastReceive broadcast1 = Utils.messageToObject(fromUser1);
-        assertEquals(new BroadcastReceive("user2", "messagefromuser2"), broadcast1);
+        System.out.println(fromUser1);
+        Broadcast broadcast1 = Utils.messageToObject(fromUser1);
+        assertEquals(new Broadcast("user2", "messagefromuser2"), broadcast1);
     }
 
     private String receiveLineWithTimeout(BufferedReader reader) {

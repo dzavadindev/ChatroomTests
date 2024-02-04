@@ -48,7 +48,7 @@ class PacketBreakup {
         out.flush();
         out.print("yname\"}\r\nBROAD");
         out.flush();
-        out.print("CAST_REQ {\"message\":\"a\"}\r\n");
+        out.print("CAST {\"message\":\"a\"}\r\n");
         out.flush();
         String serverResponse = receiveLineWithTimeout(in);
         Response<String> loginResp = Utils.messageToObject(serverResponse);
